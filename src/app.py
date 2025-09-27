@@ -19,6 +19,8 @@ current_dir = Path(__file__).parent
 app.mount("/static", StaticFiles(directory=os.path.join(Path(__file__).parent,
           "static")), name="static")
 
+from typing import List
+
 # In-memory activity database
 activities = {
     "Chess Club": {
@@ -76,6 +78,35 @@ activities = {
         "participants": ["charlotte@mergington.edu", "henry@mergington.edu"]
     }
 }
+
+# In-memory ideas list
+ideas: List[str] = []
+
+# --- IDEAS ENDPOINTS ---
+@app.get("/ideas")
+def list_ideas():
+    """List all saved ideas"""
+    return {"ideas": ideas}
+
+
+@app.post("/ideas")
+def add_idea(idea: str):
+    """Add a new idea if not empty and not duplicate"""
+    if not idea or not idea.strip():
+        raise HTTPException(status_code=400, detail="Idea cannot be empty")
+    if idea in ideas:
+        raise HTTPException(status_code=400, detail="Idea already exists")
+    ideas.append(idea)
+    return {"message": f"Idea added: {idea}"}
+
+
+@app.delete("/ideas")
+def remove_idea(idea: str):
+    """Remove an idea if it exists"""
+    if idea not in ideas:
+        raise HTTPException(status_code=404, detail="Idea not found")
+    ideas.remove(idea)
+    return {"message": f"Idea removed: {idea}"}
 
 
 @app.get("/")
